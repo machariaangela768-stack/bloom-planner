@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bloom Planner</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bloom">
+<meta name="theme-color" content="#f7e3ea">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pink:#f7e3ea; --pink-d:#e7a9bc; --sage:#e2ecdd; --sage-d:#a9c79a;
+  --lav:#ece3f5; --lav-d:#c3a8e0; --cream:#fffaf5; --card:#ffffff;
+  --ink:#5c4a53; --ink-soft:#8a7680; --line:#f0e2e8;
+  --shadow:0 4px 16px rgba(180,140,155,0.14);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --cream:#2b2430; --card:#38303e; --ink:#f3e6ec; --ink-soft:#c8b3c0;
+    --line:#4a3f4d; --pink:#4a3540; --pink-d:#e7a9bc; --sage:#33402f; --sage-d:#a9c79a;
+    --lav:#3a3145; --lav-d:#c3a8e0; --shadow:0 4px 16px rgba(0,0,0,0.35);
+  }
+}
+:root[data-theme="dark"]{
+  --cream:#2b2430; --card:#38303e; --ink:#f3e6ec; --ink-soft:#c8b3c0;
+  --line:#4a3f4d; --pink:#4a3540; --pink-d:#e7a9bc; --sage:#33402f; --sage-d:#a9c79a;
+  --lav:#3a3145; --lav-d:#c3a8e0; --shadow:0 4px 16px rgba(0,0,0,0.35);
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+body{
+  margin:0; background:var(--cream); color:var(--ink);
+  font-family:'Quicksand',sans-serif; -webkit-font-smoothing:antialiased;
+  padding-bottom:calc(90px + env(safe-area-inset-bottom,0px));
+}
+.wrap{max-width:480px;margin:0 auto;padding:18px 16px 8px;}
+header{text-align:center;padding:6px 0 10px;position:relative;}
+header .deco{font-size:18px;opacity:.55;color:var(--pink-d);letter-spacing:4px;}
+h1{font-family:'Caveat',cursive;font-size:2.6em;margin:2px 0 0;color:var(--pink-d);}
+header p{margin:2px 0 10px;font-size:.8em;letter-spacing:2px;color:var(--ink-soft);}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{
+  flex:0 0 auto;padding:8px 14px;border-radius:16px;background:var(--card);
+  border:2px solid var(--line);font-family:'Quicksand';font-weight:600;font-size:.85em;
+  color:var(--ink-soft);cursor:pointer;white-space:nowrap;transition:.15s;
+}
+.tab.active{background:var(--pink);border-color:var(--pink-d);color:var(--ink);}
+.tab .dot{margin-left:5px;color:var(--pink-d);}
+.card{
+  background:var(--card);border-radius:20px;padding:16px 16px 18px;margin-bottom:14px;
+  box-shadow:var(--shadow);border:1px solid var(--line);
+}
+.card h2{
+  font-family:'Caveat';font-size:1.5em;margin:0 0 8px;color:var(--ink);
+  display:flex;align-items:center;gap:6px;
+}
+label.small{font-size:.72em;color:var(--ink-soft);font-weight:600;letter-spacing:.5px;display:block;margin:10px 0 4px;}
+input[type=text],textarea{
+  width:100%;border:none;border-bottom:2px dashed var(--line);background:transparent;
+  font-family:'Quicksand';font-size:.95em;color:var(--ink);padding:6px 2px;outline:none;
+}
+textarea{resize:none;min-height:60px;border:2px dashed var(--line);border-radius:12px;padding:10px;background:var(--sage);background:color-mix(in srgb, var(--sage) 55%, transparent);}
+.todo-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);}
+.todo-row:last-child{border-bottom:none;}
+.heart-btn{
+  font-size:1.3em;background:none;border:none;cursor:pointer;line-height:1;flex:0 0 auto;
+  color:var(--ink-soft);opacity:.55;transition:.15s;
+}
+.heart-btn.done{color:var(--pink-d);opacity:1;transform:scale(1.08);}
+.todo-row input[type=text]{border:none;}
+.todo-row.done input[type=text]{text-decoration:line-through;color:var(--ink-soft);}
+.del-x{opacity:.35;cursor:pointer;font-size:.9em;padding:2px 4px;flex:0 0 auto;}
+.add-row{display:flex;align-items:center;gap:8px;margin-top:6px;}
+.add-row input{flex:1;}
+.add-btn{
+  background:var(--lav);color:var(--ink);border:none;border-radius:12px;
+  padding:6px 12px;font-family:'Quicksand';font-weight:700;font-size:.85em;cursor:pointer;
+}
+.pill-btn{
+  background:var(--sage);border:none;border-radius:14px;padding:9px 14px;font-family:'Quicksand';
+  font-weight:700;font-size:.8em;color:var(--ink);cursor:pointer;width:100%;margin-top:6px;
+}
+.goal-row{display:flex;align-items:center;gap:10px;padding:5px 0;}
+.affirm{
+  background:linear-gradient(135deg,var(--pink),var(--lav));border-radius:14px;padding:12px 14px;
+  font-family:'Caveat';font-size:1.25em;text-align:center;line-height:1.35;color:var(--ink);
+}
+.tracker{display:flex;justify-content:space-between;margin-top:6px;}
+.tr-day{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.68em;color:var(--ink-soft);font-weight:700;}
+.tr-face{font-size:1.4em;}
+footer.actions{max-width:480px;margin:0 auto;padding:0 16px 10px;display:flex;gap:8px;flex-wrap:wrap;}
+footer.actions button{
+  flex:1 1 29%;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:9px 6px;
+  font-family:'Quicksand';font-weight:700;font-size:.72em;color:var(--ink-soft);
+}
+#celebrate{
+  position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;
+  z-index:50;padding:24px;
+}
+#celebrate .box{
+  background:var(--card);border-radius:24px;padding:28px 22px;text-align:center;max-width:340px;
+  box-shadow:0 10px 40px rgba(0,0,0,.2);
+}
+#celebrate h2{font-family:'Caveat';font-size:2.2em;margin:0 0 6px;color:var(--pink-d);}
+#celebrate p{font-size:.9em;color:var(--ink-soft);margin:0 0 16px;}
+.confetti{position:fixed;top:-20px;font-size:1.4em;animation:fall linear forwards;z-index:51;}
+@keyframes fall{to{transform:translateY(105vh) rotate(360deg);opacity:.7;}}
+#howto,#dialog{
+  position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:50;padding:24px;
+}
+#howto .box{background:var(--card);border-radius:20px;padding:22px;max-width:340px;font-size:.85em;line-height:1.5;}
+#dialog .box{background:var(--card);border-radius:20px;padding:22px;max-width:300px;font-size:.85em;line-height:1.5;text-align:center;}
+#dialog h3{font-family:'Caveat';font-size:1.6em;margin:0 0 6px;color:var(--pink-d);}
+#howto h3{font-family:'Caveat';font-size:1.6em;margin:0 0 8px;color:var(--pink-d);}
+.close-btn{margin-top:14px;background:var(--pink);border:none;border-radius:12px;padding:8px 16px;font-weight:700;font-family:'Quicksand';}
+.mono-animal{filter:grayscale(1) contrast(1.1) brightness(.92);opacity:.85;display:inline-block;}
+.recap-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);}
+.recap-row:last-child{border-bottom:none;}
+.recap-day{font-size:.68em;font-weight:700;color:var(--ink-soft);width:32px;flex:0 0 auto;}
+.recap-text{font-size:.88em;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="deco"><span class="mono-animal">🐰</span> · ✧ · <span class="mono-animal">🦊</span></div>
+    <h1>Bloom Planner</h1>
+    <p>FOCUS · PLAN · ACHIEVE</p>
+  </header>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="content"></div>
+
+  <div class="card">
+    <label class="small">✎ Reminder</label>
+    <textarea id="reminder" placeholder="Anything you don't want to forget..."></textarea>
+    <label class="small">❀ Weekly Affirmation</label>
+    <div class="affirm" contenteditable="true" id="affirmation"></div>
+  </div>
+
+  <div class="card">
+    <h2>✦ Daily Progress</h2>
+    <div class="tracker" id="tracker"></div>
+    <button class="pill-btn" id="finishBtn">check my week ♡</button>
+  </div>
+</div>
+
+<footer class="actions">
+  <button onclick="document.getElementById('howto').style.display='flex'">⌂ Add to Home Screen</button>
+  <button onclick="restartWeek()">⟲ Restart Week</button>
+  <button onclick="resetWeek()">↻ Wipe Everything</button>
+</footer>
+
+<div id="celebrate">
+  <div class="box">
+    <div style="font-size:2em;color:var(--pink-d);letter-spacing:8px;"><span class="mono-animal">🐼</span> ✦ <span class="mono-animal">🐰</span></div>
+    <h2>You bloomed all week!</h2>
+    <p>Every day, every goal — done with love. Look how far you grew this week. You should be so proud of yourself.</p>
+    <button class="close-btn" onclick="document.getElementById('celebrate').style.display='none'">close, gently ♡</button>
+  </div>
+</div>
+
+<div id="dialog">
+  <div class="box">
+    <h3>Just checking</h3>
+    <p id="dialogText"></p>
+    <div style="display:flex;gap:10px;margin-top:4px;">
+      <button class="close-btn" id="dialogCancel" style="flex:1;background:var(--sage);">cancel</button>
+      <button class="close-btn" id="dialogOk" style="flex:1;">yes</button>
+    </div>
+  </div>
+</div>
+
+<div id="howto">
+  <div class="box">
+    <h3>Save as an app</h3>
+    <p><b>iPhone:</b> tap the Share icon in Safari → "Add to Home Screen".</p>
+    <p><b>Android:</b> tap the ⋮ menu in Chrome → "Add to Home screen" / "Install app".</p>
+    <p>It'll sit on your home screen with its own icon, just like an app 🌷</p>
+    <button class="close-btn" onclick="document.getElementById('howto').style.display='none'">got it</button>
+  </div>
+</div>
+
+<script>
+const DAYS=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const ANIMALS=['🐰','🐱','🦊','🐻','🐼','🐨','🦉'];
+let state = load();
+let active = todayIndex();
+
+function defaultState(){
+  const days={};
+  DAYS.forEach(d=>days[d]={priority:'',todos:[],notes:'',goal:'',goalDone:false});
+  return {days, goals:[{t:'',d:false},{t:'',d:false},{t:'',d:false}],
+    reminder:'', affirmation:'I am capable. I am growing. I am becoming my best self.', lastDay:null};
+}
+function todayIndex(){ const j=new Date().getDay(); return j===0?6:j-1; }
+function carryForward(){
+  const today=DAYS[todayIndex()];
+  if(!state.lastDay){ state.lastDay=today; save(); return; }
+  if(state.lastDay===today) return;
+  let idx=DAYS.indexOf(state.lastDay); let guard=0;
+  while(DAYS[idx]!==today && guard<7){
+    const fromDay=DAYS[idx]; const toDay=DAYS[(idx+1)%7];
+    const keep=[], forward=[];
+    state.days[fromDay].todos.forEach(t=>(t.d?keep:forward).push(t));
+    state.days[fromDay].todos=keep;
+    if(forward.length) state.days[toDay].todos.push(...forward.map(t=>({t:t.t,d:false})));
+    idx=(idx+1)%7; guard++;
+  }
+  state.lastDay=today; save();
+}
+function load(){
+  try{
+    const raw=localStorage.getItem('bloomPlannerData');
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return defaultState();
+}
+function save(){
+  try{ localStorage.setItem('bloomPlannerData', JSON.stringify(state)); }catch(e){}
+}
+
+function renderTabs(){
+  const t=document.getElementById('tabs'); t.innerHTML='';
+  DAYS.forEach((d,i)=>{
+    const done = dayComplete(d);
+    const b=document.createElement('div');
+    b.className='tab'+(i===active?' active':'');
+    b.innerHTML=d.slice(0,3)+(done?' <span class="dot">♥</span>':'');
+    b.onclick=()=>{active=i; renderContent(); renderTabs();};
+    t.appendChild(b);
+  });
+}
+function dayComplete(d){
+  const day=state.days[d];
+  return day.todos.length>0 && day.todos.every(x=>x.d);
+}
+
+function renderContent(){
+  const d=DAYS[active]; const day=state.days[d];
+  const c=document.getElementById('content'); c.innerHTML='';
+  const card=document.createElement('div'); card.className='card';
+  card.innerHTML=`
+    <h2><span class="mono-animal">${ANIMALS[active]}</span> ${d}</h2>
+    <label class="small">✦ Top Priority</label>
+    <input type="text" id="pri" placeholder="the one thing today" value="${esc(day.priority)}">
+    <label class="small">♡ Today's Goal</label>
+    <div class="goal-row">
+      <button class="heart-btn${day.goalDone?' done':''}" id="goalHeart">${day.goalDone?'♥':'♡'}</button>
+      <input type="text" id="goalInput" placeholder="one goal for today" value="${esc(day.goal)}">
+    </div>
+    <label class="small">♡ To Do</label>
+    <div id="todos"></div>
+    <div class="add-row"><input type="text" id="newTodo" placeholder="add a little task..."><button class="add-btn" onclick="addTodo()">add</button></div>
+    <label class="small">✎ Notes</label>
+    <textarea id="notes" placeholder="jot a thought...">${esc(day.notes)}</textarea>
+    ${d==='Monday' ? `<div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);">
+      <h2><span class="mono-animal">🐻</span> This Week's Goals</h2>
+      <div id="goals"></div>
+    </div>` : ''}
+    ${d==='Sunday' ? `<div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);">
+      <h2><span class="mono-animal">🦉</span> Didn't Get To This Week</h2>
+      <div id="recap"></div>
+    </div>` : ''}
+  `;
+  c.appendChild(card);
+  document.getElementById('goalInput').onchange=e=>{day.goal=e.target.value; save();};
+  document.getElementById('goalHeart').onclick=()=>{day.goalDone=!day.goalDone; save(); renderContent(); renderTabs();};
+  if(d==='Monday') renderGoals();
+  if(d==='Sunday') renderRecap();
+  const tl=document.getElementById('todos');
+  day.todos.forEach((td,i)=>{
+    const row=document.createElement('div'); row.className='todo-row'+(td.d?' done':'');
+    row.innerHTML=`<button class="heart-btn${td.d?' done':''}" onclick="toggleTodo(${i})">${td.d?'♥':'♡'}</button>
+      <input type="text" value="${esc(td.t)}" onchange="editTodo(${i}, this.value)">
+      <span class="del-x" onclick="delTodo(${i})">✕</span>`;
+    tl.appendChild(row);
+  });
+  document.getElementById('pri').onchange=e=>{day.priority=e.target.value; save();};
+  document.getElementById('notes').onchange=e=>{day.notes=e.target.value; save();};
+}
+function esc(s){return (s||'').replace(/"/g,'&quot;');}
+function addTodo(){
+  const inp=document.getElementById('newTodo');
+  if(!inp.value.trim())return;
+  state.days[DAYS[active]].todos.push({t:inp.value.trim(), d:false});
+  inp.value=''; save(); renderContent(); renderTabs(); renderTracker();
+}
+function toggleTodo(i){
+  const day=state.days[DAYS[active]]; day.todos[i].d=!day.todos[i].d;
+  save(); renderContent(); renderTabs(); renderTracker();
+}
+function editTodo(i,val){ state.days[DAYS[active]].todos[i].t=val; save(); }
+function delTodo(i){ state.days[DAYS[active]].todos.splice(i,1); save(); renderContent(); renderTabs(); renderTracker(); }
+
+function renderGoals(){
+  const g=document.getElementById('goals'); g.innerHTML='';
+  state.goals.forEach((goal,i)=>{
+    const row=document.createElement('div'); row.className='goal-row';
+    row.innerHTML=`<button class="heart-btn${goal.d?' done':''}" onclick="toggleGoal(${i})">${goal.d?'♥':'♡'}</button>
+      <input type="text" value="${esc(goal.t)}" placeholder="goal ${i+1}" onchange="editGoal(${i}, this.value)">`;
+    g.appendChild(row);
+  });
+}
+function toggleGoal(i){ state.goals[i].d=!state.goals[i].d; save(); renderGoals(); }
+function editGoal(i,val){ state.goals[i].t=val; save(); }
+
+function renderRecap(){
+  const box=document.getElementById('recap'); if(!box) return;
+  box.innerHTML='';
+  const rows=[];
+  DAYS.forEach(d=>{
+    state.days[d].todos.forEach((td,i)=>{
+      if(!td.d) rows.push({label:d.slice(0,3), text:td.t, on:()=>toggleRecapTodo(d,i)});
+    });
+  });
+  state.goals.forEach((g,i)=>{
+    if(g.t.trim()!=='' && !g.d) rows.push({label:'Week', text:g.t, on:()=>toggleRecapGoal(i)});
+  });
+  if(rows.length===0){
+    box.innerHTML=`<div class="affirm" style="font-size:1em;"><span class="mono-animal">🐨</span> Nothing left behind — you did it all</div>`;
+    return;
+  }
+  rows.forEach((r,idx)=>{
+    const row=document.createElement('div'); row.className='recap-row';
+    row.innerHTML=`<button class="heart-btn" id="rc${idx}">♡</button><span class="recap-day">${r.label}</span><span class="recap-text">${esc(r.text)}</span>`;
+    row.querySelector('button').onclick=r.on;
+    box.appendChild(row);
+  });
+}
+function toggleRecapTodo(dayName,i){ state.days[dayName].todos[i].d=true; save(); renderContent(); renderTabs(); renderTracker(); }
+function toggleRecapGoal(i){ state.goals[i].d=true; save(); renderContent(); }
+
+function renderTracker(){
+  const tr=document.getElementById('tracker'); tr.innerHTML='';
+  DAYS.forEach((d,i)=>{
+    const done=dayComplete(d);
+    const el=document.createElement('div'); el.className='tr-day';
+    el.innerHTML=`<span class="tr-face" style="color:${done?'var(--pink-d)':'var(--line)'}">${done?'●':'○'}</span><span>${d.slice(0,3)}</span>`;
+    tr.appendChild(el);
+  });
+}
+
+document.getElementById('reminder').oninput=e=>{state.reminder=e.target.value; save();};
+document.getElementById('affirmation').oninput=e=>{state.affirmation=e.target.innerText; save();};
+document.getElementById('reminder').value=state.reminder;
+document.getElementById('affirmation').innerText=state.affirmation;
+
+document.getElementById('finishBtn').onclick=()=>{
+  const allDays = DAYS.every(d=>dayComplete(d));
+  const allGoals = state.goals.every(g=> g.t.trim()==='' ? true : g.d) && state.goals.some(g=>g.t.trim()!=='');
+  if(allDays && allGoals){
+    document.getElementById('celebrate').style.display='flex';
+    burstConfetti();
+  } else {
+    showMessage('Not quite yet — keep going, check off your to-dos and weekly goals for every day, then come back!');
+  }
+};
+function burstConfetti(){
+  const bits=['❀','♡','✦','✧','●'];
+  const tones=['--pink-d','--lav-d','--sage-d','--ink-soft'];
+  for(let i=0;i<26;i++){
+    const s=document.createElement('div'); s.className='confetti'; s.textContent=bits[i%bits.length];
+    s.style.left=Math.random()*100+'vw';
+    s.style.color='var('+tones[i%tones.length]+')';
+    s.style.animationDuration=(2+Math.random()*1.5)+'s';
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(),3600);
+  }
+}
+function showConfirm(text,onYes){
+  const d=document.getElementById('dialog');
+  document.getElementById('dialogText').textContent=text;
+  document.getElementById('dialogCancel').style.display='';
+  document.getElementById('dialogOk').textContent='yes';
+  d.style.display='flex';
+  document.getElementById('dialogOk').onclick=()=>{ d.style.display='none'; onYes(); };
+  document.getElementById('dialogCancel').onclick=()=>{ d.style.display='none'; };
+}
+function showMessage(text){
+  const d=document.getElementById('dialog');
+  document.getElementById('dialogText').textContent=text;
+  document.getElementById('dialogCancel').style.display='none';
+  document.getElementById('dialogOk').textContent='okay';
+  d.style.display='flex';
+  document.getElementById('dialogOk').onclick=()=>{ d.style.display='none'; };
+}
+
+function resetWeek(){
+  showConfirm('Wipe everything and start totally fresh? This clears all boxes and notes.', ()=>{
+    state=defaultState(); state.lastDay=DAYS[todayIndex()]; save();
+    active=todayIndex();
+    document.getElementById('reminder').value='';
+    document.getElementById('affirmation').innerText=state.affirmation;
+    renderTabs(); renderContent(); renderTracker();
+  });
+}
+
+function restartWeek(){
+  showConfirm("Restart the week? Anything you didn't finish will jump to Monday's to-do list.", ()=>{
+    const leftover=[];
+    DAYS.forEach(d=>{ state.days[d].todos.forEach(t=>{ if(!t.d) leftover.push(t.t); }); });
+    state.goals.forEach(g=>{ if(g.t.trim()!=='' && !g.d) leftover.push(g.t); });
+    const fresh=defaultState();
+    fresh.affirmation=state.affirmation;
+    leftover.forEach(t=>fresh.days['Monday'].todos.push({t,d:false}));
+    fresh.lastDay='Monday';
+    state=fresh; save();
+    active=0;
+    document.getElementById('reminder').value='';
+    document.getElementById('affirmation').innerText=state.affirmation;
+    renderTabs(); renderContent(); renderTracker();
+  });
+}
+
+carryForward();
+renderTabs(); renderContent(); renderTracker();
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
+</body>
+</html>
